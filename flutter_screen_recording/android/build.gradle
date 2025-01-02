@@ -2,16 +2,16 @@ group 'com.isvisoft.flutter_screen_recording'
 version '1.0-SNAPSHOT'
 
 buildscript {
-    ext.kotlin_version = '1.8.0'
+    ext.kotlin_version = '1.8.22'
     repositories {
         google()
-        jcenter()
+        mavenCentral()
         maven { url 'https://jitpack.io' }
 
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:7.2.0'
+        classpath 'com.android.tools.build:gradle:8.1.0'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
 }
@@ -21,6 +21,9 @@ rootProject.allprojects {
         google()
         jcenter()
         maven { url 'https://jitpack.io' }
+        maven {
+            url "https://artifact.bytedance.com/repository/Volcengine/"
+        }
     }
 }
 
@@ -28,6 +31,7 @@ apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 
 android {
+    namespace = "com.isvisoft.flutter_screen_recording"
     compileSdkVersion 34
 
     sourceSets {
@@ -43,16 +47,13 @@ android {
     compileOptions {
         targetCompatibility JavaVersion.VERSION_1_8
     }
-    android {
-        kotlinOptions {
-            jvmTarget = '1.8'
-        }
+    kotlinOptions {
+        jvmTarget = '1.8'
     }
 }
-
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
-    implementation 'androidx.appcompat:appcompat:1.0.0'
+    implementation 'androidx.appcompat:appcompat:1.6.0'
     implementation 'com.github.HBiSoft:HBRecorder:2.0.5'
 
 }
