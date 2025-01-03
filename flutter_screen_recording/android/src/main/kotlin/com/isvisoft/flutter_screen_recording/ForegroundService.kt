@@ -104,20 +104,20 @@ class ForegroundService : Service() {
     }
 
     private fun startForegroundServiceWithNotification(intent: Intent?) {
-        var title = intent?.getStringExtra("titleExtra") ?: "Flutter Screen Recording"
-        var message = intent?.getStringExtra("messageExtra") ?: ""
+        val title = intent?.getStringExtra("titleExtra") ?: "Flutter Screen Recording"
+        val message = intent?.getStringExtra("messageExtra") ?: ""
 
         createNotificationChannel()
         val notificationIntent = Intent(this, FlutterScreenRecordingPlugin::class.java)
 
         val pendingIntent = PendingIntent.getActivity(
-            this, 0, notificationIntent, PendingIntent.FLAG_MUTABLE
+            this, 0, notificationIntent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
 
         val notification = NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle(title)
             .setContentText(message)
-            .setSmallIcon(android.R.drawable.ic_media_play)
+            .setSmallIcon(android.R.drawable.ic_media_play) // Use a system icon as fallback
             .setContentIntent(pendingIntent)
             .build()
 
