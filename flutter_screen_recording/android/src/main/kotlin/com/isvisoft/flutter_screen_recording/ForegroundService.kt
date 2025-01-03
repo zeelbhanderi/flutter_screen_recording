@@ -95,7 +95,7 @@ private fun startForegroundServiceWithNotification(intent: Intent?) {
     val notification = NotificationCompat.Builder(this, CHANNEL_ID)
         .setContentTitle(title)
         .setContentText(message)
-        .setSmallIcon(android.R.drawable.ic_media_play) // Use a system icon as fallback
+        .setSmallIcon(android.R.drawable.ic_media_play) // Use a system icon
         .setContentIntent(pendingIntent)
         .build()
 
