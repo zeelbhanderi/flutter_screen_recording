@@ -1,4 +1,4 @@
-package com.isvisoft.flutter_screen_recording
+package com.foregroundservice
 
 import android.Manifest
 import android.app.NotificationChannel
@@ -13,8 +13,9 @@ import android.os.IBinder
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
+import com.isvisoft.flutter_screen_recording.FlutterScreenRecordingPlugin
+import com.isvisoft.flutter_screen_recording.R
 import android.app.Activity
-import android.os.Binder
 
 class ForegroundService : Service() {
     private val CHANNEL_ID = "ForegroundService Kotlin"
@@ -41,92 +42,69 @@ class ForegroundService : Service() {
 
         fun stopService(context: Context) {
             val stopIntent = Intent(context, ForegroundService::class.java)
-                .setAction(ACTION_STOP)
-            context.startService(stopIntent)
+            context.stopService(stopIntent)
         }
-
-        const val ACTION_STOP = "com.foregroundservice.ACTION_STOP"
     }
 
-
-    @Suppress("DEPRECATION")
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        try {
 
-        if (intent?.action == ACTION_STOP) {
+            println("-------------------------- onStartCommand")
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                stopForeground(STOP_FOREGROUND_REMOVE)
-            } else {
-                stopForeground(true)
-            }
+            // Verificar permisos en Android 14 (SDK 34)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                if (ContextCompat.checkSelfPermission(this, Manifest.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION)
+                    != PackageManager.PERMISSION_GRANTED) {
+                    println("MediaProjection permission not granted, requesting permission")
 
-            stopSelf()
-
-            return START_NOT_STICKY
-        } else {
-
-            try {
-
-                println("-------------------------- onStartCommand")
-
-                // Verificar permisos en Android 14 (SDK 34)
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-                    if (ContextCompat.checkSelfPermission(
-                            this,
-                            Manifest.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION
-                        )
-                        == PackageManager.PERMISSION_DENIED
-                    ) {
-                        println("MediaProjection permission not granted, requesting permission")
-
-                        // Solicitar el permiso si no ha sido concedido
-                        ActivityCompat.requestPermissions(
-                            this as Activity,
-                            arrayOf(Manifest.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION),
-                            REQUEST_CODE_MEDIA_PROJECTION
-                        )
-                    } else {
-                        // Si ya está concedido, continuar normalmente
-                        startForegroundServiceWithNotification(intent)
-                    }
+                    // Solicitar el permiso si no ha sido concedido
+                    ActivityCompat.requestPermissions(
+                        this as Activity,
+                        arrayOf(Manifest.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION),
+                        REQUEST_CODE_MEDIA_PROJECTION
+                    )
                 } else {
-                    // Si no es Android 14, continuar normalmente
+                    // Si ya está concedido, continuar normalmente
                     startForegroundServiceWithNotification(intent)
                 }
-
-                return START_STICKY
-            } catch (err: Exception) {
-                println("onStartCommand err")
-                println(err)
+            } else {
+                // Si no es Android 14, continuar normalmente
+                startForegroundServiceWithNotification(intent)
             }
-            return START_STICKY
+
+            return START_NOT_STICKY
+        } catch (err: Exception) {
+            println("onStartCommand err")
+            println(err)
         }
+        return START_STICKY
     }
 
-    private fun startForegroundServiceWithNotification(intent: Intent?) {
-        val title = intent?.getStringExtra("titleExtra") ?: "Flutter Screen Recording"
-        val message = intent?.getStringExtra("messageExtra") ?: ""
+private fun startForegroundServiceWithNotification(intent: Intent?) {
+    val title = intent?.getStringExtra("titleExtra") ?: "Flutter Screen Recording"
+    val message = intent?.getStringExtra("messageExtra") ?: ""
 
-        createNotificationChannel()
-        val notificationIntent = Intent(this, FlutterScreenRecordingPlugin::class.java)
+    createNotificationChannel()
 
-        val pendingIntent = PendingIntent.getActivity(
-            this, 0, notificationIntent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
-        )
+    val notificationIntent = Intent(this, FlutterScreenRecordingPlugin::class.java)
 
-        val notification = NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle(title)
-            .setContentText(message)
-            .setSmallIcon(android.R.drawable.ic_media_play) // Use a system icon as fallback
-            .setContentIntent(pendingIntent)
-            .build()
+    val pendingIntent = PendingIntent.getActivity(
+        this, 0, notificationIntent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+    )
 
-        startForeground(1, notification)
-        println("-------------------------- startForegroundServiceWithNotification")
-    }
+    val notification = NotificationCompat.Builder(this, CHANNEL_ID)
+        .setContentTitle(title)
+        .setContentText(message)
+        .setSmallIcon(android.R.drawable.ic_media_play) // Use a system icon as fallback
+        .setContentIntent(pendingIntent)
+        .build()
 
-    override fun onBind(intent: Intent): IBinder {
-        return Binder()
+    startForeground(1, notification)
+    println("-------------------------- startForegroundServiceWithNotification")
+}
+
+    override fun onBind(intent: Intent): IBinder? {
+        return null
     }
 
     private fun createNotificationChannel() {
